@@ -26,7 +26,7 @@ router.post('/', async (request, response) => {
 
   // CREATE JWT - JSON WEB TOKEN
   const token = generateJWT(username);
-  response.send(token);
+  response.send({token: token});
 });
 
 module.exports = router;

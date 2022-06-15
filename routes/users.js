@@ -8,7 +8,7 @@ const fs = require('fs');
 
 /* GET users listing. */
 router.get('/', function(req, res, next) {
-  res.send(usersDB.map(user => {
+  res.send(usersDB.filter(user => !user.deleted).map(user => {
     return {
       username: user.username,
       name: user.name
@@ -31,7 +31,8 @@ router.post('/', async (request, response) => {
     name: name,
     password: undefined,
     created: Date.now(), // UNIX timestamp
-    updated: Date.now()
+    updated: Date.now(),
+    deleted: false
   };
 
   const salt = await bcrypt.genSalt(10);
@@ -55,8 +56,12 @@ router.put('/', authorization, async (request, response, next) => {
 });
 
 /* DELETE /users */
-// router.delete('/', authorization, (request, response, next) => {
-//   response.sendStatus(501);
-// });
+router.delete('/', authorization, async (request, response, next) => {
+  const databaseUser = usersDB.find(databaseUser => databaseUser.username == request.user.username);
+  databaseUser.deleted = true;
+  databaseUser.updated = Date.now();
+  await fs.writeFileSync('./database/db.json', JSON.stringify(usersDB));
+  response.sendStatus(204);
+});
 
 module.exports = router;
